@@ -51,8 +51,8 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // Validate environment variables
-if (!process.env.MONGODB_URI || !process.env.JWT_SECRET || !process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-  console.error('Error: MONGODB_URI, JWT_SECRET, EMAIL_USER, and EMAIL_PASS must be defined in .env file');
+if (!process.env.MONGODB_URI || !process.env.JWT_SECRET || !process.env.EMAIL_USER || !process.env.EMAIL_PASS || !process.env.RECEIVING_EMAIL) {
+  console.error('Error: MONGODB_URI, JWT_SECRET, EMAIL_USER, EMAIL_PASS, and RECEIVING_EMAIL must be defined in .env file');
   process.exit(1);
 }
 
@@ -137,6 +137,36 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
     originalName: req.file.originalname,
     mimetype: req.file.mimetype,
   });
+});
+
+// Contact Us Email Endpoint (Protected)
+app.post('/send-email', authenticateToken, async (req, res) => {
+  const { name, email, message } = req.body;
+
+  if (!name || !email || !message) {
+    return res.status(400).json({ message: 'All fields are required' });
+  }
+
+  // Validate email format
+  const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  if (!isValidEmail) {
+    return res.status(400).json({ message: 'Invalid email format' });
+  }
+
+  const mailOptions = {
+    from: email, // Sender's email (user-provided email)
+    to: process.env.RECEIVING_EMAIL, // Your email address to receive messages
+    subject: `Contact Form Submission from ${name}`,
+    text: `Name: ${name}\nEmail: ${email}\nMessage: ${message}`,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    res.status(200).json({ message: 'Email sent successfully' });
+  } catch (error) {
+    console.error('Error sending email:', error);
+    res.status(500).json({ message: 'Failed to send email' });
+  }
 });
 
 // Health Check Endpoint
@@ -286,7 +316,7 @@ app.post('/api/forgot-password', async (req, res) => {
     user.resetTokenExpiration = Date.now() + 3600000; // Token expires in 1 hour
     await user.save();
 
-    const resetLink = `http://localhost:5173/reset-password?token=${resetToken}`; // Updated to localhost:5173
+    const resetLink = `http://localhost:5173/reset-password?token=${resetToken}`;
 
     await transporter.sendMail({
       to: email,

@@ -1,1 +1,29 @@
 @import "tailwindcss";
+/* Prevent scrolling when popup is open */
+.no-scroll {
+  overflow: hidden;
+}
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px; /* for horizontal scrollbar */
+}
+
+::-webkit-scrollbar-track {
+  background: #ccc;
+}
+
+::-webkit-scrollbar-thumb {
+  background: gray;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: darkgray;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: gray #ccc;
+}

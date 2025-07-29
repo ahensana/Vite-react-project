@@ -1,13 +1,35 @@
-import { useState } from 'react'
-import './App.css'
+import { useState, useEffect } from 'react';
+import './App.css';
 import logo from './assets/Black Background.png';
 import video from './assets/videoplayback.webm';
-import stockImage from './assets/stock.jpg';
 import { Link } from 'react-router-dom';
+import angelOneLogo from './assets/angel_one.png';
+import fyersLogo from './assets/fyers.png';
 
 const App = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isDematPopupOpen, setIsDematPopupOpen] = useState(false);
+  const [formStatus, setFormStatus] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    message: '',
+  });
+
+  // Prevent scrolling when popup is open
+  useEffect(() => {
+    if (isDematPopupOpen) {
+      document.body.classList.add('no-scroll');
+    } else {
+      document.body.classList.remove('no-scroll');
+    }
+    // Cleanup on component unmount
+    return () => {
+      document.body.classList.remove('no-scroll');
+    };
+  }, [isDematPopupOpen]);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -31,8 +53,73 @@ const App = () => {
     setIsMobileMenuOpen(false);
   };
 
+  const handleDematClick = (e) => {
+    e.preventDefault();
+    setIsDematPopupOpen(true);
+  };
+
+  const closeDematPopup = () => {
+    setIsDematPopupOpen(false);
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (name === 'email') {
+      const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+      setEmailError(isValidEmail || value === '' ? '' : 'Please enter a valid email');
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email);
+    if (!isValidEmail) {
+      setEmailError('Please enter a valid email');
+      return;
+    }
+
+    const token = localStorage.getItem('token'); // Assuming JWT token is stored in localStorage
+    if (!token) {
+      setFormStatus('You must be logged in to send a message.');
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:5000/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(formData),
+      });
+      if (response.ok) {
+        setFormStatus('Message sent successfully!');
+        setFormData({ name: '', email: '', message: '' });
+        setEmailError('');
+        setTimeout(() => setFormStatus(''), 3000);
+      } else {
+        const errorData = await response.json();
+        setFormStatus(errorData.message || 'Failed to send message. Please try again.');
+      }
+    } catch (error) {
+      setFormStatus('Failed to send message. Please try again.');
+      console.error('Error sending email:', error);
+    }
+  };
+
   return (
     <div className="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 text-white min-h-screen relative font-inter">
+      {/* Fixed Video Background */}
+      <div className="fixed inset-0 w-full h-full z-0">
+        <video autoPlay muted loop playsInline className="w-full h-full object-cover">
+          <source src={video} type="video/webm" />
+          Your browser does not support the video tag.
+        </video>
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-none"></div>
+      </div>
+
       {/* Navigation */}
       <nav className="bg-white/10 backdrop-blur-md border-b border-white/20 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:pl-0 lg:pr-8">
@@ -45,19 +132,39 @@ const App = () => {
 
             {/* Navigation Links */}
             <div className="hidden md:flex items-center space-x-8">
-              <Link to="/#home" className="text-white hover:text-blue-400 transition-colors duration-200 font-medium" onClick={(e) => handleSmoothScroll(e, '#home')}>
+              <Link
+                to="/#home"
+                className="text-white hover:text-blue-400 transition-colors duration-200 font-medium"
+                onClick={(e) => handleSmoothScroll(e, '#home')}
+              >
                 Home
               </Link>
-              <Link to="/#demat" className="text-white hover:text-blue-400 transition-colors duration-200 font-medium" onClick={(e) => handleSmoothScroll(e, '#demat')}>
+              <Link
+                to="/#demat"
+                className="text-white hover:text-blue-400 transition-colors duration-200 font-medium"
+                onClick={handleDematClick}
+              >
                 Need a Demat
               </Link>
-              <Link to="/#tools" className="text-white hover:text-blue-400 transition-colors duration-200 font-medium" onClick={(e) => handleSmoothScroll(e, '#tools')}>
+              <Link
+                to="/#tools"
+                className="text-white hover:text-blue-400 transition-colors duration-200 font-medium"
+                onClick={(e) => handleSmoothScroll(e, '#tools')}
+              >
                 Tools
               </Link>
-              <Link to="/#learn" className="text-white hover:text-blue-400 transition-colors duration-200 font-medium" onClick={(e) => handleSmoothScroll(e, '#learn')}>
+              <Link
+                to="/#learn"
+                className="text-white hover:text-blue-400 transition-colors duration-200 font-medium"
+                onClick={(e) => handleSmoothScroll(e, '#learn')}
+              >
                 Learn
               </Link>
-              <Link to="/#help" className="text-white hover:text-blue-400 transition-colors duration-200 font-medium" onClick={(e) => handleSmoothScroll(e, '#help')}>
+              <Link
+                to="/#help"
+                className="text-white hover:text-blue-400 transition-colors duration-200 font-medium"
+                onClick={(e) => handleSmoothScroll(e, '#help')}
+              >
                 Help
               </Link>
               <button
@@ -84,19 +191,39 @@ const App = () => {
           {/* Mobile menu */}
           <div className={`md:hidden ${isMobileMenuOpen ? '' : 'hidden'} pb-4`}>
             <div className="flex flex-col space-y-3">
-              <Link to="/#home" className="text-white hover:text-blue-400 transition-colors duration-200 font-medium py-2" onClick={(e) => handleSmoothScroll(e, '#home')}>
+              <Link
+                to="/#home"
+                className="text-white hover:text-blue-400 transition-colors duration-200 font-medium py-2"
+                onClick={(e) => handleSmoothScroll(e, '#home')}
+              >
                 Home
               </Link>
-              <Link to="/#demat" className="text-white hover:text-blue-400 transition-colors duration-200 font-medium py-2" onClick={(e) => handleSmoothScroll(e, '#demat')}>
+              <Link
+                to="/#demat"
+                className="text-white hover:text-blue-400 transition-colors duration-200 font-medium py-2"
+                onClick={handleDematClick}
+              >
                 Need a Demat
               </Link>
-              <Link to="/#tools" className="text-white hover:text-blue-400 transition-colors duration-200 font-medium py-2" onClick={(e) => handleSmoothScroll(e, '#tools')}>
+              <Link
+                to="/#tools"
+                className="text-white hover:text-blue-400 transition-colors duration-200 font-medium py-2"
+                onClick={(e) => handleSmoothScroll(e, '#tools')}
+              >
                 Tools
               </Link>
-              <Link to="/#learn" className="text-white hover:text-blue-400 transition-colors duration-200 font-medium py-2" onClick={(e) => handleSmoothScroll(e, '#learn')}>
+              <Link
+                to="/#learn"
+                className="text-white hover:text-blue-400 transition-colors duration-200 font-medium py-2"
+                onClick={(e) => handleSmoothScroll(e, '#learn')}
+              >
                 Learn
               </Link>
-              <Link to="/#help" className="text-white hover:text-blue-400 transition-colors duration-200 font-medium py-2" onClick={(e) => handleSmoothScroll(e, '#help')}>
+              <Link
+                to="/#help"
+                className="text-white hover:text-blue-400 transition-colors duration-200 font-medium py-2"
+                onClick={(e) => handleSmoothScroll(e, '#help')}
+              >
                 Help
               </Link>
               <button
@@ -114,13 +241,8 @@ const App = () => {
       </nav>
 
       {/* Hero Section */}
-      <section id="home" className="min-h-screen py-20 px-4 relative overflow-hidden">
-        <video autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover z-0">
-          <source src={video} type="video/webm" />
-          Your browser does not support the video tag.
-        </video>
-        <div className="absolute inset-0 bg-black/50 backdrop-blur-none"></div>
-        <div className="max-w-6xl mx-auto text-center relative z-10 flex flex-col justify-center h-full">
+      <section id="home" className="min-h-screen py-20 px-4 relative z-10">
+        <div className="max-w-6xl mx-auto text-center flex flex-col justify-center h-full">
           <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-blue-400 bg-clip-text text-transparent">
             The Trader's Escape
           </h1>
@@ -134,9 +256,45 @@ const App = () => {
         </div>
       </section>
 
+      {/* Demat Popup */}
+      {isDematPopupOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+          <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 sm:p-8 w-full max-w-md sm:max-w-lg border border-white/20">
+            <h2 className="text-xl sm:text-2xl font-bold text-blue-300 mb-4 sm:mb-6 text-center">
+              Choose a Demat Account Provider
+            </h2>
+            <div className="flex flex-col items-center space-y-4 sm:space-y-6">
+              <img
+                src={angelOneLogo}
+                alt="Angel One"
+                onClick={() => {
+                  window.open('https://www.angelone.in/', '_blank');
+                  closeDematPopup();
+                }}
+                className="cursor-pointer w-32 sm:w-40 hover:scale-105 transition-transform duration-200"
+              />
+              <img
+                src={fyersLogo}
+                alt="Fyers"
+                onClick={() => {
+                  window.open('https://www.fyers.in/', '_blank');
+                  closeDematPopup();
+                }}
+                className="cursor-pointer w-32 sm:w-40 hover:scale-105 transition-transform duration-200"
+              />
+              <button
+                onClick={closeDematPopup}
+                className="bg-transparent border border-blue-400 text-blue-400 hover:text-blue-300 hover:border-blue-300 px-4 sm:px-6 py-2 rounded-lg font-medium transition-colors duration-200 w-full sm:w-auto"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* What We Offer Section */}
-      <section className="py-20 px-4 bg-cover bg-center bg-no-repeat relative" style={{ backgroundImage: `url(${stockImage})` }}>
-        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+      <section id="what-we-offer" className="py-20 px-4 relative z-10">
         <div className="max-w-6xl mx-auto relative z-10">
           <h2 className="text-4xl font-bold text-center mb-16 text-blue-300">What We Offer</h2>
           <div className="grid md:grid-cols-3 gap-8">
@@ -166,19 +324,31 @@ const App = () => {
       </section>
 
       {/* Legal Links Section */}
-      <section className="py-8 px-4 bg-slate-900/50">
+      <section className="py-8 px-4 bg-slate-900/50 relative z-10">
         <div className="max-w-4xl mx-auto text-center">
           <div className="flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-4">
-            <Link to="/disclaimer" className="legal-link bg-white/10 backdrop-blur-md rounded-lg px-6 py-3 text-blue-400 hover:text-blue-300 font-medium border border-white/20">
+            <Link
+              to="/disclaimer"
+              className="legal-link bg-white/10 backdrop-blur-md rounded-lg px-6 py-3 text-blue-400 hover:text-blue-300 font-medium border border-white/20"
+            >
               Disclaimer
             </Link>
-            <Link to="/terms" className="legal-link bg-white/10 backdrop-blur-md rounded-lg px-6 py-3 text-blue-400 hover:text-blue-300 font-medium border border-white/20">
+            <Link
+              to="/terms"
+              className="legal-link bg-white/10 backdrop-blur-md rounded-lg px-6 py-3 text-blue-400 hover:text-blue-300 font-medium border border-white/20"
+            >
               Terms & Conditions
             </Link>
-            <Link to="/privacy" className="legal-link bg-white/10 backdrop-blur-md rounded-lg px-6 py-3 text-blue-400 hover:text-blue-300 font-medium border border-white/20">
+            <Link
+              to="/privacy"
+              className="legal-link bg-white/10 backdrop-blur-md rounded-lg px-6 py-3 text-blue-400 hover:text-blue-300 font-medium border border-white/20"
+            >
               Privacy & Policy
             </Link>
-            <Link to="/risk-disclosure" className="legal-link bg-white/10 backdrop-blur-md rounded-lg px-6 py-3 text-blue-400 hover:text-blue-300 font-medium border border-white/20">
+            <Link
+              to="/risk-disclosure"
+              className="legal-link bg-white/10 backdrop-blur-md rounded-lg px-6 py-3 text-blue-400 hover:text-blue-300 font-medium border border-white/20"
+            >
               Risk Disclosure Statement
             </Link>
           </div>
@@ -186,10 +356,56 @@ const App = () => {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 px-4 bg-slate-900/50 border-t border-white/10">
+      <footer className="py-12 px-4 bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 border-t border-white/20 relative z-10">
         <div className="max-w-6xl mx-auto text-center">
           <div className="text-2xl font-bold text-blue-400 mb-4">📈 The Trader's Escape</div>
-          <p className="text-gray-400">Empowering traders through education, not speculation.</p>
+          <p className="text-gray-400 mb-8">Empowering traders through education, not speculation.</p>
+          <div className="mt-8">
+            <h2 className="text-xl font-bold text-blue-300 mb-6">Contact Us</h2>
+            <form onSubmit={handleSubmit} className="flex flex-col items-center space-y-4 max-w-md mx-auto">
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                placeholder="Your Name"
+                required
+                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              />
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                placeholder="Your Email"
+                required
+                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              />
+              <textarea
+                name="message"
+                value={formData.message}
+                onChange={handleInputChange}
+                placeholder="Type your message"
+                required
+                rows="4"
+                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              ></textarea>
+              {emailError && (
+                <p className="text-sm text-red-400">{emailError}</p>
+              )}
+              <button
+                type="submit"
+                className="w-full sm:w-auto px-6 py-2 bg-transparent border border-blue-400 text-blue-400 hover:text-blue-300 hover:border-blue-300 rounded-lg font-medium transition-colors duration-200"
+              >
+                Submit
+              </button>
+              {formStatus && (
+                <p className={`text-sm ${formStatus.includes('success') ? 'text-blue-300' : 'text-red-400'}`}>
+                  {formStatus}
+                </p>
+              )}
+            </form>
+          </div>
         </div>
       </footer>
 
@@ -199,18 +415,31 @@ const App = () => {
         className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg transition-colors duration-200 z-50"
       >
         <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+          />
         </svg>
       </button>
 
       {/* Chat Options Dropdown */}
       <div
-        className={`fixed bottom-20 right-6 bg-white/10 backdrop-blur-md rounded-lg border border-white/20 shadow-lg z-50 transition-opacity transform ${isChatOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-10 pointer-events-none'}`}
+        className={`fixed bottom-20 right-6 bg-white/10 backdrop-blur-md rounded-lg border border-white/20 shadow-lg z-50 transition-opacity transform ${
+          isChatOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-10 pointer-events-none'
+        }`}
       >
-        <button onClick={handleChatbotClick} className="block w-full text-left px-4 py-3 text-blue-400 hover:bg-white/15 hover:text-blue-300 transition-colors duration-200">
+        <button
+          onClick={handleChatbotClick}
+          className="block w-full text-left px-4 py-3 text-blue-400 hover:bg-white/15 hover:text-blue-300 transition-colors duration-200"
+        >
           Chatbot
         </button>
-        <Link to="/community-chat" className="block w-full text-left px-4 py-3 text-blue-400 hover:bg-white/15 hover:text-blue-300 transition-colors duration-200">
+        <Link
+          to="/community-chat"
+          className="block w-full text-left px-4 py-3 text-blue-400 hover:bg-white/15 hover:text-blue-300 transition-colors duration-200"
+        >
           Community Chat
         </Link>
       </div>
@@ -218,4 +447,4 @@ const App = () => {
   );
 };
 
-export default App
+export default App;
