@@ -10,6 +10,8 @@ const App = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isDematPopupOpen, setIsDematPopupOpen] = useState(false);
+  const [isAccountOpen, setIsAccountOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
   const [formStatus, setFormStatus] = useState('');
   const [emailError, setEmailError] = useState('');
   const [formData, setFormData] = useState({
@@ -39,6 +41,10 @@ const App = () => {
     setIsChatOpen(!isChatOpen);
   };
 
+  const toggleAccountOptions = () => {
+    setIsAccountOpen(!isAccountOpen);
+  };
+
   const handleChatbotClick = () => {
     alert('Chatbot functionality would be implemented here. This is a demo version.');
     setIsChatOpen(false);
@@ -62,6 +68,12 @@ const App = () => {
     setIsDematPopupOpen(false);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setIsLoggedIn(false);
+    setIsAccountOpen(false);
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -79,7 +91,7 @@ const App = () => {
       return;
     }
 
-    const token = localStorage.getItem('token'); // Assuming JWT token is stored in localStorage
+    const token = localStorage.getItem('token');
     if (!token) {
       setFormStatus('You must be logged in to send a message.');
       return;
@@ -167,15 +179,45 @@ const App = () => {
               >
                 Help
               </Link>
-              <button
-                onClick={() => window.open('/login', '_blank')}
-                className="relative bg-transparent border-2 border-cyan-400 text-cyan-400 px-4 py-1 rounded-lg font-bold transition-all duration-300 shadow-lg w-fit overflow-hidden group hover:text-black hover:border-cyan-300 neon-button"
-              >
-                <span className="relative z-10">Login</span>
-                <div className="absolute inset-0 bg-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg"></div>
-                <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 opacity-75 blur-sm animate-pulse"></div>
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-30 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out"></div>
-              </button>
+              {isLoggedIn ? (
+                <div className="relative">
+                  <div
+                    className="text-white hover:text-blue-400 transition-colors duration-200 font-medium cursor-pointer"
+                    onClick={toggleAccountOptions}
+                  >
+                    Account
+                  </div>
+                  <div
+                    className={`absolute top-full right-0 mt-2 bg-white/10 backdrop-blur-md rounded-lg border border-white/20 shadow-lg z-50 transition-all duration-300 ease-in-out transform ${
+                      isAccountOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-4 pointer-events-none'
+                    }`}
+                  >
+                    <Link
+                      to="/profile"
+                      className="block w-full text-left px-4 py-3 text-blue-400 hover:bg-white/15 hover:text-blue-300 transition-colors duration-200"
+                      onClick={() => setIsAccountOpen(false)}
+                    >
+                      Profile
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full text-left px-4 py-3 text-blue-400 hover:bg-white/15 hover:text-blue-300 transition-colors duration-200"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => window.open('/login', '_blank')}
+                  className="relative bg-transparent border-2 border-cyan-400 text-cyan-400 px-4 py-1 rounded-lg font-bold transition-all duration-300 shadow-lg w-fit overflow-hidden group hover:text-black hover:border-cyan-300 neon-button"
+                >
+                  <span className="relative z-10">Login</span>
+                  <div className="absolute inset-0 bg-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg"></div>
+                  <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 opacity-75 blur-sm animate-pulse"></div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-30 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out"></div>
+                </button>
+              )}
             </div>
 
             {/* Mobile menu button */}
@@ -226,15 +268,45 @@ const App = () => {
               >
                 Help
               </Link>
-              <button
-                onClick={() => window.open('/login', '_blank')}
-                className="relative bg-transparent border-2 border-cyan-400 text-cyan-400 px-4 py-1 rounded-lg font-bold transition-all duration-300 shadow-lg w-fit overflow-hidden group hover:text-black hover:border-cyan-300 neon-button"
-              >
-                <span className="relative z-10">Login</span>
-                <div className="absolute inset-0 bg-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg"></div>
-                <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 opacity-75 blur-sm animate-pulse"></div>
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-30 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out"></div>
-              </button>
+              {isLoggedIn ? (
+                <div className="relative">
+                  <div
+                    className="text-white hover:text-blue-400 transition-colors duration-200 font-medium py-2 cursor-pointer"
+                    onClick={toggleAccountOptions}
+                  >
+                    Account
+                  </div>
+                  <div
+                    className={`mt-2 bg-white/10 backdrop-blur-md rounded-lg border border-white/20 shadow-lg transition-all duration-300 ease-in-out transform ${
+                      isAccountOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-4 pointer-events-none'
+                    }`}
+                  >
+                    <Link
+                      to="/profile"
+                      className="block w-full text-left px-4 py-3 text-blue-400 hover:bg-white/15 hover:text-blue-300 transition-colors duration-200"
+                      onClick={() => setIsAccountOpen(false)}
+                    >
+                      Profile
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full text-left px-4 py-3 text-blue-400 hover:bg-white/15 hover:text-blue-300 transition-colors duration-200"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => window.open('/login', '_blank')}
+                  className="relative bg-transparent border-2 border-cyan-400 text-cyan-400 px-4 py-1 rounded-lg font-bold transition-all duration-300 shadow-lg w-fit overflow-hidden group hover:text-black hover:border-cyan-300 neon-button"
+                >
+                  <span className="relative z-10">Login</span>
+                  <div className="absolute inset-0 bg-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg"></div>
+                  <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 opacity-75 blur-sm animate-pulse"></div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-30 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out"></div>
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -426,8 +498,8 @@ const App = () => {
 
       {/* Chat Options Dropdown */}
       <div
-        className={`fixed bottom-20 right-6 bg-white/10 backdrop-blur-md rounded-lg border border-white/20 shadow-lg z-50 transition-opacity transform ${
-          isChatOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-10 pointer-events-none'
+        className={`fixed bottom-20 right-6 bg-white/10 backdrop-blur-md rounded-lg border border-white/20 shadow-lg z-50 transition-all duration-300 ease-in-out transform ${
+          isChatOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-4 pointer-events-none'
         }`}
       >
         <button
