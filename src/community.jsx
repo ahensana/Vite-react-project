@@ -6,7 +6,6 @@ import logo from './assets/Black Background.png';
 import attachIcon from './assets/attach-file.png';
 import sendIcon from './assets/sendlogo.png'; 
 
-
 const SERVER_URL = 'http://localhost:5000';
 
 const ErrorBoundary = ({ children }) => {
@@ -26,13 +25,13 @@ const ErrorBoundary = ({ children }) => {
 
   if (hasError) {
     return (
-      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+      <div className="bg-red-100/10 border border-red-400/20 text-red-400 px-4 py-3 rounded relative" role="alert">
         <strong className="font-bold">Oops!</strong>
         <span className="block sm:inline"> Something went wrong. Please try again later or contact support.</span>
         {error && <p className="mt-2 text-sm">Error: {error.toString()}</p>}
         <button
           onClick={() => setHasError(false)}
-          className="mt-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded"
+          className="mt-2 bg-blue-400 hover:bg-blue-300 text-white font-bold py-1 px-2 rounded"
         >
           Try Again
         </button>
@@ -210,8 +209,9 @@ const Community = () => {
 
   const formatTimestamp = (timestamp) => {
     return new Date(timestamp).toLocaleTimeString([], {
-      hour: '2-digit',
+      hour: 'numeric',
       minute: '2-digit',
+      hour12: true,
     });
   };
 
@@ -228,6 +228,11 @@ const Community = () => {
     setIsMobileMenuOpen(false);
   };
 
+  const handleEmojiClick = () => {
+    console.log('Emoji button clicked - implement emoji picker here');
+    // Placeholder for emoji picker integration
+  };
+
   const renderMessage = (message) => {
     const isSystemMessage = message.type === 'system';
     const isOwnMessage = message.username === username;
@@ -238,35 +243,40 @@ const Community = () => {
         className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} mb-2`}
       >
         <div
-          className={`max-w-xs sm:max-w-md p-2 rounded-lg ${isOwnMessage ? 'bg-green-500 text-white' : 'bg-gray-200 text-black'} ${isSystemMessage ? 'text-gray-500 w-full text-center' : ''}`}
+          className={`max-w-xs sm:max-w-md p-2 rounded-lg ${isOwnMessage ? 'bg-blue-400 text-white' : 'bg-white/10 text-white'} ${isSystemMessage ? 'text-gray-400 w-full text-center' : ''}`}
         >
-          {!isSystemMessage && (
+          {!isSystemMessage && !isOwnMessage && (
             <div className="flex items-baseline space-x-2 mb-1 text-xs">
-              <span className="font-semibold">{message.username}</span>
-              <span className="text-gray-600">{formatTimestamp(message.timestamp)}</span>
+              <span className="font-semibold text-blue-300">{message.username}</span>
+              <span className="text-gray-400">{formatTimestamp(message.timestamp)}</span>
             </div>
           )}
-          <div>
-            {message.content}
-            {message.file && (
-              <div className="mt-1">
-                {message.file.mimetype.startsWith('image/') ? (
-                  <img
-                    src={`${SERVER_URL}${message.file.url}`}
-                    alt={message.file.originalName}
-                    className="max-w-full rounded-lg"
-                  />
-                ) : (
-                  <a
-                    href={`${SERVER_URL}${message.file.url}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-500 hover:text-blue-700 underline"
-                  >
-                    📎 {message.file.originalName}
-                  </a>
-                )}
-              </div>
+          <div className={isOwnMessage ? 'flex justify-between items-center' : ''}>
+            <div className={isOwnMessage ? 'flex-1' : ''}>
+              {message.content}
+              {message.file && (
+                <div className="mt-1">
+                  {message.file.mimetype.startsWith('image/') ? (
+                    <img
+                      src={`${SERVER_URL}${message.file.url}`}
+                      alt={message.file.originalName}
+                      className="max-w-full rounded-lg"
+                    />
+                  ) : (
+                    <a
+                      href={`${SERVER_URL}${message.file.url}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-400 hover:text-blue-300 underline"
+                    >
+                      📎 {message.file.originalName}
+                    </a>
+                  )}
+                </div>
+              )}
+            </div>
+            {isOwnMessage && !isSystemMessage && (
+              <span className="text-gray-400 text-xs ml-2">{formatTimestamp(message.timestamp)}</span>
             )}
           </div>
         </div>
@@ -276,20 +286,20 @@ const Community = () => {
 
   if (!isConnected) {
     return (
-      <div className="bg-gray-100 text-gray-800 min-h-screen flex items-center justify-center">
-        <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-lg">
-          <h1 className="text-2xl font-bold text-green-500 mb-4 text-center">Join Community Chat</h1>
+      <div className="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 text-white min-h-screen flex items-center justify-center">
+        <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 max-w-md w-full border border-white/20 shadow-lg">
+          <h1 className="text-2xl font-bold text-blue-300 mb-4 text-center">Join Community Chat</h1>
           <input
             type="text"
             placeholder="Enter your username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && connectToServer()}
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-400 mb-4"
+            className="w-full border border-white/20 rounded-lg px-4 py-2 bg-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 mb-4"
           />
           <button
             onClick={connectToServer}
-            className="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
+            className="w-full bg-blue-400 hover:bg-blue-300 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
           >
             Join Chat
           </button>
@@ -300,14 +310,14 @@ const Community = () => {
 
   return (
     <ErrorBoundary>
-      <div className="flex h-screen bg-gray-100">
+      <div className="flex h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
         {/* Sidebar */}
-        <aside className="w-72 bg-white border-r border-gray-200 p-4 hidden md:block">
-          <h2 className="text-lg font-semibold text-gray-700 mb-4">Online Users ({connectedUsers.length})</h2>
+        <aside className="w-72 bg-white/10 backdrop-blur-md border-r border-white/20 p-4 hidden md:block">
+          <h2 className="text-lg font-semibold text-blue-300 mb-4">Online Users ({connectedUsers.length})</h2>
           <ul className="space-y-2 overflow-y-auto h-[calc(100vh-120px)]">
             {connectedUsers.map((user) => (
-              <li key={user.userId} className="text-gray-600 flex items-center">
-                <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+              <li key={user.userId} className="text-gray-300 flex items-center">
+                <span className="w-2 h-2 bg-blue-400 rounded-full mr-2"></span>
                 {user.username}
               </li>
             ))}
@@ -317,7 +327,7 @@ const Community = () => {
               socket.disconnect();
               setIsConnected(false);
             }}
-            className="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 mt-4"
+            className="w-full bg-blue-400 hover:bg-blue-300 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 mt-4"
           >
             Leave Chat
           </button>
@@ -326,18 +336,18 @@ const Community = () => {
         {/* Main Content */}
         <div className="flex-1 flex flex-col">
           {/* Header */}
-          <header className="bg-white border-b border-gray-200 p-4 flex items-center justify-between">
+          <header className="bg-white/10 backdrop-blur-md border-b border-white/20 p-4 flex items-center justify-between">
             <div className="flex items-center">
               <img src={logo} alt="Logo" className="w-10 h-10 rounded-full mr-2" />
               <div>
-                <h2 className="text-lg font-semibold text-gray-800">The Trader's Escape</h2>
-                <p className="text-xs text-gray-500">
+                <h2 className="text-lg font-semibold text-blue-300">The Trader's Escape</h2>
+                <p className="text-xs text-gray-400">
                   {connectedUsers.map((user) => user.username).join(', ') || 'No users online'}
                 </p>
               </div>
             </div>
             <div className="md:hidden">
-              <button onClick={toggleMobileMenu} className="text-gray-600">
+              <button onClick={toggleMobileMenu} className="text-white">
                 <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
@@ -348,29 +358,39 @@ const Community = () => {
           {/* Chat Section */}
           <section className="flex-1 overflow-y-auto p-4">
             {messages.map(renderMessage)}
-            {typingUsers.length > 0 && (
-              <div className="text-gray-500 italic text-sm">
-                {typingUsers.map((user) => user.username).join(', ')}{' '}
-                {typingUsers.length === 1 ? 'is' : 'are'} typing...
+            {typingUsers.filter((user) => user.username !== username).length > 0 && (
+              <div className="text-gray-400 italic text-sm">
+                {typingUsers
+                  .filter((user) => user.username !== username)
+                  .map((user) => user.username)
+                  .join(', ')}{' '}
+                {typingUsers.filter((user) => user.username !== username).length === 1 ? 'is' : 'are'} typing...
               </div>
             )}
             <div ref={messagesEndRef} />
           </section>
 
           {/* Input Field */}
-          <div className="bg-white border-t border-gray-200 p-4">
+          <div className="bg-white/10 backdrop-blur-md border-t border-white/20 p-4">
             {selectedFile && (
-              <div className="flex items-center space-x-2 mb-2 text-gray-600">
-                <span> {selectedFile.name}</span>
+              <div className="flex items-center space-x-2 mb-2 text-gray-300">
+                <span>{selectedFile.name}</span>
                 <button
                   onClick={() => setSelectedFile(null)}
-                  className="text-red-500 hover:text-red-700"
+                  className="text-red-400 hover:text-red-300"
                 >
                   ✕
                 </button>
               </div>
             )}
             <div className="flex space-x-2">
+              <button
+                onClick={handleEmojiClick}
+                className="hover:bg-white/15 text-white px-2 py-2 rounded-full"
+                title="Add emoji"
+              >
+                <span className="text-lg">😊</span>
+              </button>
               <input
                 type="file"
                 ref={fileInputRef}
@@ -380,7 +400,7 @@ const Community = () => {
               />
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className=" hover:bg-gray-300 text-gray-800 px-2 py-2 rounded-full"
+                className="hover:bg-white/15 text-white px-2 py-2 rounded-full"
                 title="Attach file"
               >
                 <img src={attachIcon} alt="Attach" className="w-5 h-5" />
@@ -393,26 +413,25 @@ const Community = () => {
                 }}
                 onKeyPress={handleKeyPress}
                 placeholder="Type a message..."
-                className="flex-1 bg-gray-100 border border-gray-300 rounded-lg px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 "
+                className="flex-1 bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
                 rows="1"
               />
               <button
                 onClick={sendMessage}
                 disabled={(!newMessage.trim() && !selectedFile) || isUploading}
-                className=" text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 "
+                className="text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
               >
                 {isUploading ? '⏳' : <img src={sendIcon} alt="Send" className="w-8 h-8" />}
               </button>
-
             </div>
           </div>
 
           {/* Mobile Menu */}
-          <div className={`md:hidden ${isMobileMenuOpen ? 'block' : 'hidden'} bg-white p-4`}>
+          <div className={`md:hidden ${isMobileMenuOpen ? 'block' : 'hidden'} bg-white/10 backdrop-blur-md p-4`}>
             <ul className="space-y-2">
               {connectedUsers.map((user) => (
-                <li key={user.userId} className="text-gray-600 flex items-center">
-                  <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                <li key={user.userId} className="text-gray-300 flex items-center">
+                  <span className="w-2 h-2 bg-blue-400 rounded-full mr-2"></span>
                   {user.username}
                 </li>
               ))}
@@ -422,7 +441,7 @@ const Community = () => {
                 socket.disconnect();
                 setIsConnected(false);
               }}
-              className="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 mt-4"
+              className="w-full bg-blue-500 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 mt-4"
             >
               Leave Chat
             </button>
@@ -434,4 +453,3 @@ const Community = () => {
 };
 
 export default Community;
-
