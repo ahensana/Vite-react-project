@@ -11,9 +11,10 @@ import Login from './Login';
 import Register from './Register';
 import ForgotPassword from './ForgotPassword';
 import ResetPassword from './ResetPassword';
-import Community from './community'; // Updated to lowercase 'community'
+import Community from './community';
+import Profile from './Profile'; // Added Profile import
 
-import './index.css'; // Tailwind or global styles
+import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
@@ -29,6 +30,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/community-chat" element={<Community />} />
+        <Route path="/profile" element={<Profile />} /> {/* Added Profile route */}
         <Route path="*" element={<div>404 Not Found</div>} />
       </Routes>
     </BrowserRouter>
