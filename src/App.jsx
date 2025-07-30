@@ -11,6 +11,7 @@ const App = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isDematPopupOpen, setIsDematPopupOpen] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
+  const [isLoginPopupOpen, setIsLoginPopupOpen] = useState(false); // New state for login popup
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
   const [formStatus, setFormStatus] = useState('');
   const [emailError, setEmailError] = useState('');
@@ -20,9 +21,9 @@ const App = () => {
     message: '',
   });
 
-  // Prevent scrolling when popup is open
+  // Prevent scrolling when popups are open
   useEffect(() => {
-    if (isDematPopupOpen) {
+    if (isDematPopupOpen || isLoginPopupOpen) {
       document.body.classList.add('no-scroll');
     } else {
       document.body.classList.remove('no-scroll');
@@ -31,7 +32,7 @@ const App = () => {
     return () => {
       document.body.classList.remove('no-scroll');
     };
-  }, [isDematPopupOpen]);
+  }, [isDematPopupOpen, isLoginPopupOpen]);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -66,6 +67,19 @@ const App = () => {
 
   const closeDematPopup = () => {
     setIsDematPopupOpen(false);
+  };
+
+  const closeLoginPopup = () => {
+    setIsLoginPopupOpen(false);
+  };
+
+  const handleCommunityChatClick = (e) => {
+    if (!isLoggedIn) {
+      e.preventDefault();
+      setIsLoginPopupOpen(true);
+      setIsChatOpen(false);
+    }
+    // If logged in, the Link will navigate to /community-chat
   };
 
   const handleLogout = () => {
@@ -365,6 +379,46 @@ const App = () => {
         </div>
       )}
 
+      {/* Login/Signup Popup */}
+      {isLoginPopupOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+          <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 sm:p-8 w-full max-w-md sm:max-w-lg border border-white/20">
+            <h2 className="text-xl sm:text-2xl font-bold text-blue-300 mb-4 sm:mb-6 text-center">
+              Please Log In or Sign Up
+            </h2>
+            <p className="text-gray-300 mb-6 text-center">
+              You need to be logged in to join the Community Chat.
+            </p>
+            <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+              <button
+                onClick={() => {
+                  window.open('/login', '_blank');
+                  closeLoginPopup();
+                }}
+                className="bg-transparent border border-blue-400 text-blue-400 hover:text-blue-300 hover:border-blue-300 px-4 sm:px-6 py-2 rounded-lg font-medium transition-colors duration-200 w-full sm:w-auto"
+              >
+                Log In
+              </button>
+              <button
+                onClick={() => {
+                  window.open('/register', '_blank');
+                  closeLoginPopup();
+                }}
+                className="bg-transparent border border-blue-400 text-blue-400 hover:text-blue-300 hover:border-blue-300 px-4 sm:px-6 py-2 rounded-lg font-medium transition-colors duration-200 w-full sm:w-auto"
+              >
+                Sign Up
+              </button>
+              <button
+                onClick={closeLoginPopup}
+                className="bg-transparent border border-blue-400 text-blue-400 hover:text-blue-300 hover:border-blue-300 px-4 sm:px-6 py-2 rounded-lg font-medium transition-colors duration-200 w-full sm:w-auto"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* What We Offer Section */}
       <section id="what-we-offer" className="py-20 px-4 relative z-10">
         <div className="max-w-6xl mx-auto relative z-10">
@@ -511,6 +565,7 @@ const App = () => {
         <Link
           to="/community-chat"
           className="block w-full text-left px-4 py-3 text-blue-400 hover:bg-white/15 hover:text-blue-300 transition-colors duration-200"
+          onClick={handleCommunityChatClick}
         >
           Community Chat
         </Link>

@@ -330,7 +330,7 @@ const Community = () => {
             <div className="flex items-center">
               <img src={logo} alt="Logo" className="w-10 h-10 rounded-full mr-2" />
               <div>
-                <h2 className="text-lg font-semibold text-gray-800">The Final Stand</h2>
+                <h2 className="text-lg font-semibold text-gray-800">The Trader's Escape</h2>
                 <p className="text-xs text-gray-500">
                   {connectedUsers.map((user) => user.username).join(', ') || 'No users online'}
                 </p>
