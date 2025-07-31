@@ -4,7 +4,8 @@ import io from 'socket.io-client';
 import axios from 'axios';
 import logo from './assets/Black Background.png';
 import attachIcon from './assets/attach-file.png';
-import sendIcon from './assets/sendlogo.png'; 
+import sendIcon from './assets/sendlogo.png';
+import emojiImg from './assets/emoji.png';
 
 const SERVER_URL = 'http://localhost:5000';
 
@@ -389,7 +390,7 @@ const Community = () => {
                 className="hover:bg-white/15 text-white px-2 py-2 rounded-full"
                 title="Add emoji"
               >
-                <span className="text-lg">😊</span>
+                <img src={emojiImg} alt="Emoji" className="w-7 h-7" />
               </button>
               <input
                 type="file"

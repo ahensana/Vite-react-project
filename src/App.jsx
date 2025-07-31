@@ -20,6 +20,9 @@ const App = () => {
     email: '',
     message: '',
   });
+  const [isActive, setIsActive] = useState(false); // For tick animation
+  const [isLoading, setIsLoading] = useState(false); // For loading spinner
+  const [showLoginAlert, setShowLoginAlert] = useState(false); // For login required alert
 
   // Prevent scrolling when popups are open
   useEffect(() => {
@@ -107,10 +110,12 @@ const App = () => {
 
     const token = localStorage.getItem('token');
     if (!token) {
-      setFormStatus('You must be logged in to send a message.');
+      setShowLoginAlert(true);
+      setTimeout(() => setShowLoginAlert(false), 3000);
       return;
     }
 
+    setIsLoading(true);
     try {
       const response = await fetch('http://localhost:5000/send-email', {
         method: 'POST',
@@ -121,10 +126,14 @@ const App = () => {
         body: JSON.stringify(formData),
       });
       if (response.ok) {
+        setIsActive(true); // Show tick
         setFormStatus('Message sent successfully!');
         setFormData({ name: '', email: '', message: '' });
         setEmailError('');
-        setTimeout(() => setFormStatus(''), 3000);
+        setTimeout(() => {
+          setIsActive(false); // reset tick
+          setFormStatus('');
+        }, 1200); // match animation duration
       } else {
         const errorData = await response.json();
         setFormStatus(errorData.message || 'Failed to send message. Please try again.');
@@ -133,6 +142,7 @@ const App = () => {
       setFormStatus('Failed to send message. Please try again.');
       console.error('Error sending email:', error);
     }
+    setIsLoading(false);
   };
 
   return (
@@ -202,9 +212,8 @@ const App = () => {
                     Account
                   </div>
                   <div
-                    className={`absolute top-full right-0 mt-2 bg-white/10 backdrop-blur-md rounded-lg border border-white/20 shadow-lg z-50 transition-all duration-300 ease-in-out transform ${
-                      isAccountOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-4 pointer-events-none'
-                    }`}
+                    className={`absolute top-full right-0 mt-2 bg-white/10 backdrop-blur-md rounded-lg border border-white/20 shadow-lg z-50 transition-all duration-300 ease-in-out transform ${isAccountOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-4 pointer-events-none'
+                      }`}
                   >
                     <Link
                       to="/profile"
@@ -291,9 +300,8 @@ const App = () => {
                     Account
                   </div>
                   <div
-                    className={`mt-2 bg-white/10 backdrop-blur-md rounded-lg border border-white/20 shadow-lg transition-all duration-300 ease-in-out transform ${
-                      isAccountOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-4 pointer-events-none'
-                    }`}
+                    className={`mt-2 bg-white/10 backdrop-blur-md rounded-lg border border-white/20 shadow-lg transition-all duration-300 ease-in-out transform ${isAccountOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-4 pointer-events-none'
+                      }`}
                   >
                     <Link
                       to="/profile"
@@ -519,12 +527,42 @@ const App = () => {
               {emailError && (
                 <p className="text-sm text-red-400">{emailError}</p>
               )}
-              <button
-                type="submit"
-                className="w-full sm:w-auto px-6 py-2 bg-transparent border border-blue-400 text-blue-400 hover:text-blue-300 hover:border-blue-300 rounded-lg font-medium transition-colors duration-200"
-              >
-                Submit
-              </button>
+              {/* Login required alert */}
+              {showLoginAlert && (
+                <div className="mb-2 w-full text-red-600 text-center font-medium transition-opacity duration-300">
+                  You must be logged in to send a message.
+                </div>
+              )}
+              <div className="wrapper w-full sm:w-auto flex justify-center">
+                <button
+                  type="submit"
+                  className={
+                    `relative flex items-center justify-center
+                     bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-400
+                     text-white font-bold text-lg cursor-pointer overflow-hidden
+                     transition-all duration-300 group focus:outline-none
+                     shadow-lg rounded-full
+                     border-2 border-blue-400
+                     hover:from-cyan-400 hover:to-blue-600 hover:shadow-blue-400/50
+                     ${isActive ? 'w-10 h-10 px-0' : 'w-[170px] h-10 px-6'}`
+                  }
+                  style={{ minWidth: isActive ? '2.5rem' : '10.625rem' }}
+                  disabled={isActive || isLoading}
+                >
+                  {/* Spinner while loading */}
+                  {isLoading && !isActive && (
+                    <span className="loader absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 border-4 border-blue-300 border-t-transparent rounded-full animate-spin"></span>
+                  )}
+                  {/* Submit text (hide if loading or tick) */}
+                  <span className={`transition-all duration-300 ${isActive || isLoading ? 'opacity-0 invisible' : 'opacity-100 visible'}`}>Submit</span>
+                  {/* Tick after success */}
+                  <div className={`success absolute inset-0 flex items-center justify-center bg-white rounded-full z-10 transition-all duration-300 ${isActive ? 'opacity-100 visible' : 'opacity-0 invisible'}`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 29.756 29.756" className="w-5 h-5">
+                      <path d="M29.049,5.009L28.19,4.151c-0.943-0.945-2.488-0.945-3.434,0L10.172,18.737l-5.175-5.173c-0.943-0.944-2.489-0.944-3.432,0.001l-0.858,0.857c-0.943,0.944-0.943,2.489,0,3.433l7.744,7.752c0.944,0.943,2.489,0.943,3.433,0L29.049,8.442C29.991,7.498,29.991,5.953,29.049,5.009z" />
+                    </svg>
+                  </div>
+                </button>
+              </div>
               {formStatus && (
                 <p className={`text-sm ${formStatus.includes('success') ? 'text-blue-300' : 'text-red-400'}`}>
                   {formStatus}
@@ -552,9 +590,8 @@ const App = () => {
 
       {/* Chat Options Dropdown */}
       <div
-        className={`fixed bottom-20 right-6 bg-white/10 backdrop-blur-md rounded-lg border border-white/20 shadow-lg z-50 transition-all duration-300 ease-in-out transform ${
-          isChatOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-4 pointer-events-none'
-        }`}
+        className={`fixed bottom-20 right-6 bg-white/10 backdrop-blur-md rounded-lg border border-white/20 shadow-lg z-50 transition-all duration-300 ease-in-out transform ${isChatOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-4 pointer-events-none'
+          }`}
       >
         <button
           onClick={handleChatbotClick}
