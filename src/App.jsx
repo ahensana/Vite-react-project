@@ -20,6 +20,8 @@ const App = () => {
     email: '',
     message: '',
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [isActive, setIsActive] = useState(false);
 
   // Prevent scrolling when popups are open
   useEffect(() => {
@@ -111,6 +113,9 @@ const App = () => {
       return;
     }
 
+    setIsLoading(true);
+    setIsActive(false);
+
     try {
       const response = await fetch('http://localhost:5000/send-email', {
         method: 'POST',
@@ -122,16 +127,20 @@ const App = () => {
       });
       if (response.ok) {
         setFormStatus('Message sent successfully!');
+        setIsActive(true);
+        setIsLoading(false);
         setFormData({ name: '', email: '', message: '' });
         setEmailError('');
         setTimeout(() => setFormStatus(''), 3000);
       } else {
         const errorData = await response.json();
         setFormStatus(errorData.message || 'Failed to send message. Please try again.');
+        setIsLoading(false);
       }
     } catch (error) {
       setFormStatus('Failed to send message. Please try again.');
       console.error('Error sending email:', error);
+      setIsLoading(false);
     }
   };
 
@@ -519,12 +528,32 @@ const App = () => {
               {emailError && (
                 <p className="text-sm text-red-400">{emailError}</p>
               )}
-              <button
-                type="submit"
-                className="w-full sm:w-auto px-6 py-2 bg-transparent border border-blue-400 text-blue-400 hover:text-blue-300 hover:border-blue-300 rounded-lg font-medium transition-colors duration-200"
-              >
-                Submit
-              </button>
+              <div className="wrapper w-full sm:w-auto flex justify-center">
+                <button
+                  type="submit"
+                  className={
+                    `relative flex items-center justify-center font-bold text-lg cursor-pointer overflow-hidden transition-all duration-500 group focus:outline-none shadow-lg
+                    ${isActive ? 'w-10 h-10 rounded-full px-0' : 'w-[170px] h-10 rounded-full px-6'}
+                    ${isActive || isLoading ? 'bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 text-white' : 'bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 text-white hover:brightness-110'}
+                    `
+                  }
+                  style={{ minWidth: isActive ? '2.5rem' : '10.625rem' }}
+                  disabled={isActive || isLoading}
+                >
+                  {/* Spinner while loading */}
+                  {isLoading && !isActive && (
+                    <span className="loader absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin"></span>
+                  )}
+                  {/* Submit text (hide if loading or tick) */}
+                  <span className={`transition-all duration-300 ${isActive || isLoading ? 'opacity-0 invisible' : 'opacity-100 visible'}`}>Submit</span>
+                  {/* Tick after success */}
+                  <div className={`success absolute inset-0 flex items-center justify-center rounded-full z-10 transition-all duration-300 ${isActive ? 'opacity-100 visible' : 'opacity-0 invisible'} bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 29.756 29.756" className="w-5 h-5 text-white fill-white">
+                      <path d="M29.049,5.009L28.19,4.151c-0.943-0.945-2.488-0.945-3.434,0L10.172,18.737l-5.175-5.173c-0.943-0.944-2.489-0.944-3.432,0.001l-0.858,0.857c-0.943,0.944-0.943,2.489,0,3.433l7.744,7.752c0.944,0.943,2.489,0.943,3.433,0L29.049,8.442C29.991,7.498,29.991,5.953,29.049,5.009z" />
+                    </svg>
+                  </div>
+                </button>
+              </div>
               {formStatus && (
                 <p className={`text-sm ${formStatus.includes('success') ? 'text-blue-300' : 'text-red-400'}`}>
                   {formStatus}
