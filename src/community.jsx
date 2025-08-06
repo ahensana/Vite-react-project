@@ -54,12 +54,14 @@ const Community = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobileUserListOpen, setIsMobileUserListOpen] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const maxRetries = 3;
 
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const typingTimeoutRef = useRef(null);
+  const textareaRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -187,6 +189,13 @@ const Community = () => {
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+    // Reset textarea height after sending message
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      const isMobile = window.innerWidth <= 640;
+      const minHeight = isMobile ? '32px' : '40px';
+      textareaRef.current.style.height = minHeight;
+    }
   };
 
   const handleTyping = () => {
@@ -234,6 +243,9 @@ const Community = () => {
     // Placeholder for emoji picker integration
   };
 
+  const openMobileUserList = () => setIsMobileUserListOpen(true);
+  const closeMobileUserList = () => setIsMobileUserListOpen(false);
+
   const renderMessage = (message) => {
     const isSystemMessage = message.type === 'system';
     const isOwnMessage = message.username === username;
@@ -249,12 +261,12 @@ const Community = () => {
           {!isSystemMessage && !isOwnMessage && (
             <div className="flex items-baseline space-x-2 mb-1 text-xs">
               <span className="font-semibold text-blue-300">{message.username}</span>
-              <span className="text-gray-400">{formatTimestamp(message.timestamp)}</span>
+              <span className="text-black">{formatTimestamp(message.timestamp)}</span>
             </div>
           )}
-          <div className={isOwnMessage ? 'flex justify-between items-center' : ''}>
-            <div className={isOwnMessage ? 'flex-1' : ''}>
-              {message.content}
+          <div className={isOwnMessage ? 'flex justify-between items-start' : ''}>
+            <div className={`${isOwnMessage ? 'flex-1' : ''} break-words overflow-hidden`}>
+              <div className="whitespace-pre-wrap">{message.content}</div>
               {message.file && (
                 <div className="mt-1">
                   {message.file.mimetype.startsWith('image/') ? (
@@ -277,7 +289,7 @@ const Community = () => {
               )}
             </div>
             {isOwnMessage && !isSystemMessage && (
-              <span className="text-gray-400 text-xs ml-2">{formatTimestamp(message.timestamp)}</span>
+              <span className="text-black text-xs ml-2">{formatTimestamp(message.timestamp)}</span>
             )}
           </div>
         </div>
@@ -323,15 +335,6 @@ const Community = () => {
               </li>
             ))}
           </ul>
-          <button
-            onClick={() => {
-              socket.disconnect();
-              setIsConnected(false);
-            }}
-            className="w-full bg-blue-400 hover:bg-blue-300 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 mt-4"
-          >
-            Leave Chat
-          </button>
         </aside>
 
         {/* Main Content */}
@@ -347,13 +350,7 @@ const Community = () => {
                 </p>
               </div>
             </div>
-            <div className="md:hidden">
-              <button onClick={toggleMobileMenu} className="text-white">
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-            </div>
+            {/* Removed mobile menu bar button */}
           </header>
 
           {/* Chat Section */}
@@ -407,15 +404,30 @@ const Community = () => {
                 <img src={attachIcon} alt="Attach" className="w-5 h-5" />
               </button>
               <textarea
+                ref={textareaRef}
                 value={newMessage}
                 onChange={(e) => {
                   setNewMessage(e.target.value);
                   handleTyping();
+                  if (textareaRef.current) {
+                    textareaRef.current.style.height = 'auto';
+                    // Responsive max height: 120px desktop, 70px mobile
+                    const isMobile = window.innerWidth <= 640;
+                    const maxHeight = isMobile ? 70 : 120;
+                    textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, maxHeight) + 'px';
+                  }
                 }}
                 onKeyPress={handleKeyPress}
                 placeholder="Type a message..."
-                className="flex-1 bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="flex-1 bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none scrollbar-hide"
                 rows="1"
+                style={{
+                  maxHeight: window.innerWidth <= 640 ? '70px' : '120px',
+                  minHeight: window.innerWidth <= 640 ? '32px' : '40px',
+                  overflowY: 'auto',
+                  scrollbarWidth: 'none',
+                  msOverflowStyle: 'none'
+                }}
               />
               <button
                 onClick={sendMessage}
@@ -428,7 +440,7 @@ const Community = () => {
           </div>
 
           {/* Mobile Menu */}
-          <div className={`md:hidden ${isMobileMenuOpen ? 'block' : 'hidden'} bg-white/10 backdrop-blur-md p-4`}>
+          <div className={`md:hidden mobile-menu-dropdown${isMobileMenuOpen ? ' open' : ''} bg-white/10 backdrop-blur-md p-4`}>
             <ul className="space-y-2">
               {connectedUsers.map((user) => (
                 <li key={user.userId} className="text-gray-300 flex items-center">
@@ -437,18 +449,30 @@ const Community = () => {
                 </li>
               ))}
             </ul>
-            <button
-              onClick={() => {
-                socket.disconnect();
-                setIsConnected(false);
-              }}
-              className="w-full bg-blue-500 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 mt-4"
-            >
-              Leave Chat
-            </button>
           </div>
         </div>
       </div>
+      {isMobileUserListOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 md:hidden">
+          <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 w-11/12 max-w-xs border border-white/20 shadow-lg">
+            <h2 className="text-lg font-semibold text-blue-300 mb-4 text-center">Online Users</h2>
+            <ul className="space-y-2 max-h-60 overflow-y-auto">
+              {connectedUsers.map((user) => (
+                <li key={user.userId} className="text-gray-300 flex items-center">
+                  <span className="w-2 h-2 bg-blue-400 rounded-full mr-2"></span>
+                  {user.username}
+                </li>
+              ))}
+            </ul>
+            <button
+              onClick={closeMobileUserList}
+              className="w-full bg-blue-400 hover:bg-blue-300 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 mt-4"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </ErrorBoundary>
   );
 };

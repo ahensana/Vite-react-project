@@ -98,3 +98,17 @@
     background-position: 0 0;
   }
 }
+
+/* Smooth dropdown for mobile menu */
+.mobile-menu-dropdown {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+}
+
+.mobile-menu-dropdown.open {
+  max-height: 400px;
+  /* or a value that fits your menu */
+  opacity: 1;
+}
